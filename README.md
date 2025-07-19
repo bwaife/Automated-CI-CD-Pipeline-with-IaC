@@ -1,1 +1,1 @@
-# LAMP-STACK-AWS-Project
+# Automated CI/CD Pipeline 
