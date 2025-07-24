@@ -43,3 +43,7 @@ host_vars/
 group_vars/
 inventory/
 .terraform/
+.terraform/
+*.tfstate*
+.terraform.lock.hcl
+.terraform/
