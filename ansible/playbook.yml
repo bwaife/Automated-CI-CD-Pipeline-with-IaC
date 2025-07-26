@@ -1,0 +1,52 @@
+- name: Configure web server 
+  hosts: webserver
+  become: true 
+  tasks:
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+    
+    - name: Create a deploy user
+      user:
+        name: deploy
+        groups: sudo
+        append: yes
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+        state: present
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present 
+
+    - name: Ensure service is running
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - nginx
+        - docker
+    
+    - name: Harden SSH configuration
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{item.regexp}}"
+        line: "{{item.line}}"
+      loop:
+        - { regexp: '^PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^PasswordAuthentication', line: 'PasswordAuthentication no' }
+      notify: 
+        - Restart SSH
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
