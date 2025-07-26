@@ -1,31 +1,35 @@
 - name: Configure web server 
-  hosts: webserver
+  hosts: all
   become: true 
   tasks:
-    - name: Update apt packages
-      apt:
-        update_cache: yes
-        upgrade: dist
+    - name: Update yum packages
+      yum:
+        name: '*'
+        state: latest
     
     - name: Create a deploy user
       user:
         name: deploy
-        groups: sudo
+        groups: wheel
         append: yes
 
     - name: Install Docker
-      apt:
-        name:
-          - docker.io
-          - docker-compose
+      yum:
+        name: docker
         state: present
 
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
     - name: Install Nginx
-      apt:
+      yum:
         name: nginx
         state: present 
 
-    - name: Ensure service is running
+    - name: Ensure services are running
       service:
         name: "{{ item }}"
         state: started
@@ -33,6 +37,12 @@
       loop:
         - nginx
         - docker
+    
+    - name: Add deploy user to docker group
+      user:
+        name: deploy
+        groups: docker
+        append: yes
     
     - name: Harden SSH configuration
       lineinfile:
