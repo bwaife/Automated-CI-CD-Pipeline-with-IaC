@@ -19,6 +19,17 @@ terraform {
   }
 }
 
+resource "null_resource" "ansible" {
+  triggers = {
+    instance_ip = aws_instance.web_server.public_ip # Trigger this resource when the instance IP changes
+  }
+
+  provisioner "local-exec" {
+    command = "ansible-playbook -i inventory.ini playbook.yml"    
+  }
+  
+}
+
 # ------------------------------
 # AWS Provider Block
 # ------------------------------
