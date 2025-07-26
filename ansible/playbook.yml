@@ -2,11 +2,12 @@
   hosts: all
   become: true 
   tasks:
+    - name: Wait for autommatic updates to finish
+      shell: while pgrep yum; do sleep 5; done
+
     - name: Update yum packages
-      yum:
-        name: '*'
-        state: latest
-    
+      shell: yum update -y
+
     - name: Create a deploy user
       user:
         name: deploy
@@ -14,10 +15,9 @@
         append: yes
 
     - name: Install Docker
-      yum:
-        name: docker
-        state: present
+      raw: yum install -y docker
 
+   
     - name: Install Docker Compose
       get_url:
         url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
@@ -25,9 +25,7 @@
         mode: '0755'
 
     - name: Install Nginx
-      yum:
-        name: nginx
-        state: present 
+      raw: amazon-linux-extras install -y nginx1
 
     - name: Ensure services are running
       service:
