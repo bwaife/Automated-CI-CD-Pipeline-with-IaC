@@ -25,7 +25,7 @@ terraform {
 
 # This block connects Terraform to your AWS account and sets default tags.
 provider "aws" {
-  region = "us-west-2"  # The AWS region where all resources will be created
+  region = "eu-west-1"  # The AWS region where all resources will be created
 
   default_tags {
     tags = {

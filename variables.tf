@@ -6,7 +6,7 @@
 # Example: us-west-2 = Oregon, us-east-1 = N. Virginia
 variable "aws_region" {
   description = "The AWS region where resources will be created"
-  default     = "us-west-2"
+  default     = "eu-west-1"
 }
 
 # ------------------------------
