@@ -11,7 +11,7 @@ terraform {
       version = "~> 5.0"        # Use any 5.x version (e.g., 5.1, 5.2)
     }
   } 
-  
+
   backend "s3" {
     bucket = "mybucket-bw" # S3 bucket to store Terraform state files
     key    = "terraform.tfstate" # Path within the bucket
@@ -193,3 +193,6 @@ resource "aws_instance" "web_server" {
     Environment = var.environment                   # dev, test, or prod
   }
 }
+
+
+
