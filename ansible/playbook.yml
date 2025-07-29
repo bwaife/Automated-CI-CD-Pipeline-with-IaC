@@ -8,6 +8,56 @@
     - name: Update yum packages
       shell: yum update -y
 
+    - name: Enabled Amazon Corretto 11 repository
+      shell: amazon-linux-extras enable corretto11
+
+    - name: Install Java 11
+      shell: yum install -y java-11-amazon-corretto java-11-corretto-devel
+
+    - name: Set JAVA_HOME environment variable
+      shell: echo 'export JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto' >> /etc/environment
+
+    - name: Add Jenkins repository key
+      shell: rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
+
+    - name: Add Jenkins repository
+      shell: |
+        cat > /etc/yum.repos.d/jenkins.repo << EOF
+        [jenkins]
+        name=Jenkins-stable
+        baseurl=http://pkg.jenkins.io/redhat-stable
+        gpgcheck=1
+        EOF
+
+    - name: Install Jenkins
+      shell: yum install -y jenkins
+
+    - name: Start Jenkins service
+      systemd:
+        name: jenkins
+        state: started
+        enabled: yes
+    
+    - name: Wait for Jenkins to start
+      wait_for:
+        port: 8080
+        delay: 30
+        timeout: 300
+    
+    - name: Get Jenkins initial admin password
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_password
+      ignore_errors: yes
+    
+
+    - name: Display Jenkins initial admin password
+      debug:
+        msg: "Jenkins initial admin password: {{ jenkins_password.stdout }}"
+      when: jenkins_password.stdout is defined
+    
+    - name: Install Git
+      shell: yum install -y git
+
     - name: Create a deploy user
       user:
         name: deploy
@@ -23,6 +73,36 @@
         url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
         dest: /usr/local/bin/docker-compose
         mode: '0755'
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add Jenkins user to docker group
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+    
+    - name: Restart Jenkins to apply changes
+      systemd:
+        name: jenkins
+        state: restarted
+
+    - name: Create marker file to indicate setup completion
+      file: 
+        path: /tmp/jenkins_setup_complete
+        state: touch
+    
+    - name: Display Jenkins access information
+      debug:
+        msg: 
+          - "Jenkins is now running!"
+          - "Access Jenkins at: http://{{ ansible_host }}:8080"
+          - "Initial admin password: {{ jenkins_password.stdout | default('Check /var/lib/jenkins/secrets/initialAdminPassword') }}"
+          - "SSH to server: ssh -i your-key.pem ec2-user@{{ ansible_host }}"
 
     - name: Install Nginx
       raw: amazon-linux-extras install -y nginx1
@@ -52,6 +132,7 @@
         - { regexp: '^PasswordAuthentication', line: 'PasswordAuthentication no' }
       notify: 
         - Restart SSH
+
 
   handlers:
     - name: Restart SSH

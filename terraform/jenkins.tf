@@ -15,11 +15,12 @@ tags = {
 #SSH access rule 
 resource "aws_security_group_rule" "jenkins_ssh" {
   type = "ingress"
-   from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Open to the world (ok for testing only)
-    security_group_id = aws_security_group.jenkins_sg.id
+  from_port   = 22
+  to_port     = 22
+  protocol    = "tcp"
+  cidr_blocks = ["93.107.64.147/32"]  # Open to the world (ok for testing only)
+  description       = "SSH access restricted to admin IP only"
+  security_group_id = aws_security_group.jenkins_sg.id
 }
 
 resource "aws_security_group_rule" "jenkins_web_interface" {
@@ -76,14 +77,12 @@ resource "null_resource" "Jenkins_ansible" {
   }
 
   provisioner "local-exec" {
-    command = "ansible-playbook -i ../ansible/inventory.ini ../ansible/jenkins.yml"
+    command = "ansible-playbook -i ../ansible/inventory.ini ../ansible/playbook.yml"
   }
 
   depends_on = [ aws_instance.Jenkins_server ]
   
 }
-
-
 
 # ------------------------------
 # Outputs for Jenkins
@@ -102,4 +101,5 @@ output "jenkins_ssh_command" {
 output "web_server_url" {
     value = "http://${aws_instance.web_server.public_ip}"
     description = "The URL to access the web server"
+
 }
