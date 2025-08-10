@@ -8,25 +8,11 @@
   tasks:
     # System Updates
     - name: Update system packages
-      yum:
-        name: '*'
-        state: latest
-
-    # This is to ensure Ansible will use yum instead of dnf
-    - name: Ensure yum is used
-      yum:
-        name: python38
-        state: present
-      vars:
-        ansible_pakage_manager: yum
+      shell: yum update -y
 
     # Java Installation
-    - name: Install Java 11
-      yum:
-        name: 
-          - java-11-amazon-corretto
-          - java-11-amazon-corretto-devel
-        state: present
+    - name: Install Java 17
+      shell: yum install -y java-17-amazon-corretto java-17-amazon-corretto-devel
 
     - name: Set JAVA_HOME
       lineinfile:
@@ -36,17 +22,13 @@
 
     # Jenkins Installation
     - name: Add Jenkins repository
-      yum_repository:
-        name: jenkins
-        description: Jenkins Repository
-        baseurl: http://pkg.jenkins.io/redhat-stable
-        gpgkey: https://pkg.jenkins.io/redhat/jenkins.io.key
-        gpgcheck: yes
+      shell: |
+        yum install -y wget
+        wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins.io/redhat-stable/jenkins.repo
+        rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
 
     - name: Install Jenkins
-      yum:
-        name: jenkins
-        state: present
+      shell: yum install -y jenkins
 
     - name: Start and enable Jenkins
       systemd:
@@ -56,9 +38,7 @@
 
     # Docker Installation
     - name: Install Docker
-      yum:
-        name: docker
-        state: present
+      shell: yum install -y docker
 
     - name: Install Docker Compose
       get_url:
@@ -74,9 +54,7 @@
 
     # Web Server
     - name: Install Nginx
-      package:
-        name: nginx
-        state: present
+      shell: yum install -y nginx
 
     - name: Start and enable Nginx
       systemd:
@@ -101,9 +79,7 @@
 
     # Essential Tools
     - name: Install Git
-      yum:
-        name: git
-        state: present
+      shell: yum install -y git
 
     # Security Hardening
     - name: Secure SSH configuration
